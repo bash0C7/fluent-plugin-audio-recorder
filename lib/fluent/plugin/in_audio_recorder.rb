@@ -15,6 +15,7 @@
 
 require 'fluent/plugin/input'
 require 'fluent/config/error'
+require 'fluent/event'  # EventTime.nowのため
 require 'fileutils'
 require 'tempfile'
 require_relative 'audio_recorder/recorder'
@@ -109,26 +110,18 @@ module Fluent
         if output_file && File.exist?(output_file) && File.size(output_file) > 1000
           log.info "Emitting recorded audio file: #{file_path}"
       
-          time = Fluent::Engine.now
-          
-          # Read file content as binary
-          file_content = File.binread(file_path)
-          
-          # Extract just the filename with extension from the path
-          filename = File.basename(file_path)
-          
           record = {
             'path' => file_path,
-            'filename' => filename,
+            'filename' => File.basename(file_path), # Extract just the filename with extension from the path
             'size' => File.size(file_path),
             'timestamp' => Time.now.to_i,
             'device' => @device,
             'duration' => duration.round(2),
             'format' => @audio_codec,
-            'content' => file_content
+            'content' => File.binread(file_path)　# Read file content as binary
           }
           
-          router.emit(@tag, time, record)
+          router.emit(@tag, Fluent::EventTime.now, record)
         end
       end
 
