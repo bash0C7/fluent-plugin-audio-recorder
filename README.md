@@ -1,8 +1,8 @@
 # fluent-plugin-audio-recorder
 
-[Fluentd](https://fluentd.org/) input plugin to do something.
+[Fluentd](https://fluentd.org/) input plugin for recording audio from macOS devices.
 
-TODO: write description for you plugin.
+This plugin allows you to record audio from macOS devices with automatic silence detection for stopping recordings. It uses FFmpeg with avfoundation to capture audio and can be configured with various audio parameters.
 
 ## Installation
 
@@ -28,13 +28,50 @@ $ bundle
 
 ## Configuration
 
-You can generate configuration template:
+```
+<source>
+  @type audio_recorder
+  
+  # Required parameters
+  device 0                # Recording device number (integer)
+  
+  # Optional parameters
+  silence_duration 1.0    # Duration in seconds to consider as silence (default: 1.0)
+  noise_level -30         # Noise level threshold in dB for silence detection (default: -30)
+  min_duration 2          # Minimum recording duration in seconds (default: 2)
+  max_duration 900        # Maximum recording duration in seconds (default: 900 = 15 minutes)
+  
+  # Audio settings
+  audio_codec aac         # Audio codec (default: aac)
+  audio_bitrate 192k      # Audio bitrate (default: 192k)
+  audio_sample_rate 44100 # Audio sample rate (default: 44100)
+  audio_channels 1        # Audio channels (default: 1)
+  
+  # Output settings
+  tag audio_recorder.recording  # Event tag (default: audio_recorder.recording)
+  buffer_path /tmp/fluentd-audio-recorder # Temporary file path (default: /tmp/fluentd-audio-recorder)
+</source>
+```
+
+## Output Record Format
 
 ```
-$ fluent-plugin-config-format input audio-recorder
+{
+  "path": "/path/to/recorded/audio/file.aac",
+  "filename": "20240302-123456_1709289368_0.aac",
+  "size": 123456,
+  "device": 0,
+  "format": "aac",
+  "content": <binary data>
+}
 ```
 
-You can copy and paste generated documents here.
+## Requirements
+
+- Ruby 2.5.0 or later
+- fluentd v1.0.0 or later
+- ffmpeg (installed on your system)
+- macOS environment (uses avfoundation)
 
 ## Development and Testing
 
@@ -44,6 +81,24 @@ To run the tests:
 
 ```bash
 $ bundle exec rake test
+```
+
+## Troubleshooting
+
+### Checking Available Devices
+
+You can check available recording devices with the following command:
+
+```bash
+ffmpeg -f avfoundation -list_devices true -i ""
+```
+
+### Checking Error Logs
+
+Run fluentd in debug mode to see detailed logs:
+
+```bash
+fluentd -c fluent.conf -v
 ```
 
 # fluent-plugin-audio-recorder
@@ -66,9 +121,9 @@ $ gem install fluent-plugin-audio-recorder
   device 0                # 録音するデバイス番号（整数）
   
   # オプションパラメータ
-  silence_duration 1.5    # 無音と判断する秒数（デフォルト: 1.0）
-  noise_level -35         # 無音と判断するノイズレベル(dB)（デフォルト: -30）
-  min_duration 3          # 最小録音時間(秒)（デフォルト: 2）
+  silence_duration 1.0    # 無音と判断する秒数（デフォルト: 1.0）
+  noise_level -30         # 無音と判断するノイズレベル(dB)（デフォルト: -30）
+  min_duration 2          # 最小録音時間(秒)（デフォルト: 2）
   max_duration 900        # 最大録音時間(秒)（デフォルト: 900 = 15分）
   
   # 音声設定
@@ -78,8 +133,8 @@ $ gem install fluent-plugin-audio-recorder
   audio_channels 1        # 音声チャンネル数（デフォルト: 1）
   
   # 出力設定
-  tag audio.recording     # イベントタグ（デフォルト: audio.recording）
-  buffer_path /tmp/fluentd-audio # 一時ファイル保存パス（デフォルト: /tmp/fluentd-audio-recorder）
+  tag audio_recorder.recording  # イベントタグ（デフォルト: audio_recorder.recording）
+  buffer_path /tmp/fluentd-audio-recorder # 一時ファイル保存パス（デフォルト: /tmp/fluentd-audio-recorder）
 </source>
 ```
 
@@ -88,11 +143,11 @@ $ gem install fluent-plugin-audio-recorder
 ```
 {
   "path": "/path/to/recorded/audio/file.aac",
+  "filename": "20240302-123456_1709289368_0.aac",
   "size": 123456,
-  "timestamp": 1709289368,
   "device": 0,
-  "duration": 45.2,
-  "format": "aac"
+  "format": "aac",
+  "content": <バイナリデータ>
 }
 ```
 

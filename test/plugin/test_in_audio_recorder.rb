@@ -4,7 +4,7 @@ require "fileutils"
 
 class AudioRecorderInputTest < Test::Unit::TestCase
   class MockRecorder
-    attr_reader :test_file_path, :test_duration
+    attr_reader :test_file_path
     
     def initialize(test_file_path)
       @test_file_path = test_file_path
@@ -82,36 +82,32 @@ class AudioRecorderInputTest < Test::Unit::TestCase
 
       # Create a test audio file
       test_file_path = File.join(@tmp_dir, "test_audio.aac")
-      #test_duration = 10.5
       test_content = "dummy audio content" * 100  # Make the file size > 1000 bytes
       
       File.open(test_file_path, "w") do |f|
         f.write(test_content)
       end
 
-      # Replace the recorder with our mock (Create a mock Recorder class to avoid actual FFmpeg calls)
+      # Replace the recorder with our mock
       d.instance.instance_variable_set(:@recorder, MockRecorder.new(test_file_path))
       
       # Run the input plugin and capture emitted events
       d.run(expect_emits: 1, timeout: 5) do
-        # Simulate the record_and_emit method directly
-        #d.instance.send(:record_and_emit, -1)
+        # The record_and_emit method is called automatically in the thread
       end
       
       # Verify emitted events
       events = d.events
-      puts events
       assert_equal 1, events.size
       
       tag, time, record = events[0]
       assert_equal "audio_recorder.recording", tag
       assert_equal "test_audio.aac", record["filename"]
       assert_equal test_file_path, record["path"]
-      #assert_equal test_duration.round(2), record["duration"]
       assert_equal "aac", record["format"]
+      assert_equal 0, record["device"]
       assert_true record.has_key?("content")
       assert_true record.has_key?("size")
-      #assert_true record.has_key?("timestamp")
       
       # Verify the binary content is passed through correctly
       original_content = File.binread(test_file_path)

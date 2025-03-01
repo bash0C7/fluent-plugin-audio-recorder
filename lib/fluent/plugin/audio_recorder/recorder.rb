@@ -116,11 +116,9 @@ module Fluent
           # Verify recording file
           if File.exist?(output_file) && File.size?(output_file) && File.size(output_file) > 1000
             @log.info "Recording completed: #{output_file} (#{recording_duration.round(2)}s)"
-            #return [output_file, recording_duration]
             return output_file
           else
             @log.warn "Recording file is missing or too small: #{output_file}"
-            #return [nil, 0]
             return nil
           end
         end

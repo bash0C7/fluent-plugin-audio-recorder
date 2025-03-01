@@ -1,6 +1,6 @@
 require 'fluent/plugin/input'
 require 'fluent/config/error'
-require 'fluent/event'  # EventTime.nowのため
+require 'fluent/event'  # For EventTime.now
 require 'fileutils'
 require 'tempfile'
 require_relative 'audio_recorder/recorder'
@@ -69,16 +69,19 @@ module Fluent
       end
 
       def multi_workers_ready?
-        true
+        false
+      end
+
+      def zero_downtime_restart_ready?
+        false
       end
 
       def start
         super
         @recording_thread = thread_create(:audio_recording_thread) do
           # Recording loop: continues while plugin is running
-          #until thread_stopped?
+          # Single recording for now, not in a loop
           record_and_emit
-          #end
         end
       end
 
@@ -91,7 +94,7 @@ module Fluent
       private
 
       def record_and_emit
-        #output_file, duration = @recorder.record_with_silence_detection
+        # Call recorder to record audio file with silence detection
         output_file = @recorder.record_with_silence_detection
         if output_file && File.exist?(output_file) && File.size(output_file) > 1000
           log.info "Emitting recorded audio file: #{output_file}"
@@ -100,9 +103,7 @@ module Fluent
             'path' => output_file,
             'filename' => File.basename(output_file), # Extract just the filename with extension from the path
             'size' => File.size(output_file),
-            #'timestamp' => Fluent::EventTime.now,
             'device' => @device, 
-            #'duration' => duration.round(2),
             'format' => @audio_codec,
             'content' => File.binread(output_file) # Read file content as binary
           }
