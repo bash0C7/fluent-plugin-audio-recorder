@@ -36,11 +36,15 @@ $ fluent-plugin-config-format input audio-recorder
 
 You can copy and paste generated documents here.
 
-## Copyright
+## Development and Testing
 
-* Copyright(c) 2025- bash0C7
-* License
-  * Apache License, Version 2.0
+After checking out the repo, run `bundle install` to install dependencies.
+
+To run the tests:
+
+```bash
+$ bundle exec rake test
+```
 
 # fluent-plugin-audio-recorder
 
@@ -99,6 +103,16 @@ $ gem install fluent-plugin-audio-recorder
 - ffmpeg（システムにインストールされていること）
 - macOS環境（avfoundationを使用）
 
+## 開発とテスト
+
+リポジトリをクローンした後、`bundle install`で依存関係をインストールします。
+
+テストを実行するには:
+
+```bash
+$ bundle exec rake test
+```
+
 ## トラブルシューティング
 
 ### 利用可能なデバイスの確認方法
@@ -116,7 +130,3 @@ ffmpeg -f avfoundation -list_devices true -i ""
 ```bash
 fluentd -c fluent.conf -v
 ```
-
-## ライセンス
-
-MIT License
