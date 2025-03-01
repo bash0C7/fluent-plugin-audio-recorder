@@ -13,11 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# lib/fluent/plugin/in_audio_recorder.rb の修正内容
+
 require 'fluent/plugin/input'
 require 'fluent/config/error'
 require 'fileutils'
 require 'tempfile'
-require 'logger'
+# require 'logger' # 削除：標準ロガーは使用しない
 require 'streamio-ffmpeg'
 require 'open3'
 
@@ -73,7 +75,7 @@ module Fluent
 
       def start
         super
-        @logger = create_logger
+        # @logger = create_logger # 削除：fluentdのlogを使用するため不要
         @running = true
         @recording_thread = Thread.new(&method(:run))
       end
@@ -86,14 +88,8 @@ module Fluent
 
       private
 
-      def create_logger
-        logger = Logger.new(STDERR)
-        logger.formatter = proc { |severity, datetime, progname, msg| 
-          "#{datetime.strftime('%Y-%m-%d %H:%M:%S')} [#{severity}] AudioRecorder: #{msg}\n" 
-        }
-        logger
-      end
-      
+      # create_loggerメソッドを削除（不要）
+
       def check_ffmpeg
         begin
           `ffmpeg -version`
