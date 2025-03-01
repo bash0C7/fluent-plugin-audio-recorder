@@ -39,14 +39,6 @@ module Fluent
           @stop_requested = true
         end
 
-        def check_ffmpeg
-          begin
-            `ffmpeg -version`
-          rescue => e
-            raise Fluent::ConfigError, "FFmpeg is not installed or not in PATH: #{e.message}"
-          end
-        end
-
         def record_with_silence_detection
           timestamp = Time.now.strftime("%Y%m%d-%H%M%S_%s")
           output_file = File.join(@buffer_path, "#{timestamp}_#{@device}.#{@audio_codec}")

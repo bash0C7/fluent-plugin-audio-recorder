@@ -80,7 +80,6 @@ module Fluent
         }
         
         @recorder = AudioRecorder::Recorder.new(config, log)
-        @recorder.check_ffmpeg
       end
 
       def multi_workers_ready?
@@ -91,13 +90,8 @@ module Fluent
         super
         @recording_thread = thread_create(:audio_recording_thread) do
           # Recording loop: continues while plugin is running
-          begin
-            until thread_stopped?
-              record_and_emit
-            end
-          rescue => e
-            log.error "Error in recording thread", error: e
-            log.error_backtrace
+          until thread_stopped?
+            record_and_emit
           end
         end
       end
@@ -111,41 +105,33 @@ module Fluent
       private
 
       def record_and_emit
-        begin
-          output_file, duration = @recorder.record_with_silence_detection
-          if output_file && File.exist?(output_file) && File.size(output_file) > 1000
-            emit_audio_file(output_file, duration)
-          end
-        rescue => e
-          log.error "Error during recording", error: e
-          log.error_backtrace
+        output_file, duration = @recorder.record_with_silence_detection
+        if output_file && File.exist?(output_file) && File.size(output_file) > 1000
+          log.info "Emitting recorded audio file: #{file_path}"
+      
+          time = Fluent::Engine.now
+          
+          # Read file content as binary
+          file_content = File.binread(file_path)
+          
+          # Extract just the filename with extension from the path
+          filename = File.basename(file_path)
+          
+          record = {
+            'path' => file_path,
+            'filename' => filename,
+            'size' => File.size(file_path),
+            'timestamp' => Time.now.to_i,
+            'device' => @device,
+            'duration' => duration.round(2),
+            'format' => @audio_codec,
+            'content' => file_content
+          }
+          
+          router.emit(@tag, time, record)
         end
       end
 
-      def emit_audio_file(file_path, duration)
-        log.info "Emitting recorded audio file: #{file_path}"
-        
-        time = Fluent::Engine.now
-        
-        # Read file content as binary
-        file_content = File.binread(file_path)
-        
-        # Extract just the filename with extension from the path
-        filename = File.basename(file_path)
-        
-        record = {
-          'path' => file_path,
-          'filename' => filename,
-          'size' => File.size(file_path),
-          'timestamp' => Time.now.to_i,
-          'device' => @device,
-          'duration' => duration.round(2),
-          'format' => @audio_codec,
-          'content' => file_content
-        }
-        
-        router.emit(@tag, time, record)
-      end
     end
   end
 end
