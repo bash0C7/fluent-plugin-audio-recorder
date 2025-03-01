@@ -7,9 +7,9 @@ Gem::Specification.new do |spec|
   spec.authors = ["bash0C7"]
   spec.email   = ["ksb.4038.nullpointer+github@gmail.com"]
 
-  spec.summary       = %q{TODO: Write a short summary, because Rubygems requires one.}
-  spec.description   = %q{TODO: Write a longer description or delete this line.}
-  spec.homepage      = "TODO: Put your gem's website or public repo URL here."
+  spec.summary       = %q{Fluentd input plugin for recording audio from macOS devices}
+  spec.description   = %q{A Fluentd input plugin that records audio from macOS devices with silence detection}
+  spec.homepage      = "https://github.com/bash0C7/fluent-plugin-audio-recorder"
   spec.license       = "Apache-2.0"
 
   spec.files         = Dir.chdir(__dir__) do
@@ -25,4 +25,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake", "~> 13.2.1"
   spec.add_development_dependency "test-unit", "~> 3.6.7"
   spec.add_runtime_dependency "fluentd", [">= 0.14.10", "< 2"]
+  spec.add_runtime_dependency "streamio-ffmpeg", "~> 3.0"
+  spec.add_runtime_dependency "fileutils", "~> 1.6"
 end
