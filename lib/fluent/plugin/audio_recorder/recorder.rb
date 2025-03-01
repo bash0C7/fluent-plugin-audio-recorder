@@ -133,7 +133,6 @@ module Fluent
             return [output_file, recording_duration]
           else
             @log.warn "Recording file is missing or too small: #{output_file}"
-            File.unlink(output_file) if File.exist?(output_file)
             return [nil, 0]
           end
         end
