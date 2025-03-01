@@ -100,7 +100,7 @@ module Fluent
             'path' => output_file,
             'filename' => File.basename(output_file), # Extract just the filename with extension from the path
             'size' => File.size(output_file),
-            'timestamp' => Fluent::EventTime.now,
+            #'timestamp' => Fluent::EventTime.now,
             'device' => @device, 
             #'duration' => duration.round(2),
             'format' => @audio_codec,
