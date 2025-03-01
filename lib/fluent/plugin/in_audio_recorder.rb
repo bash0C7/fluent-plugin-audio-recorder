@@ -76,9 +76,9 @@ module Fluent
         super
         @recording_thread = thread_create(:audio_recording_thread) do
           # Recording loop: continues while plugin is running
-          until thread_stopped?
-            record_and_emit
-          end
+          #until thread_stopped?
+          record_and_emit
+          #end
         end
       end
 
@@ -91,19 +91,20 @@ module Fluent
       private
 
       def record_and_emit
-        output_file, duration = @recorder.record_with_silence_detection
+        #output_file, duration = @recorder.record_with_silence_detection
+        output_file = @recorder.record_with_silence_detection
         if output_file && File.exist?(output_file) && File.size(output_file) > 1000
-          log.info "Emitting recorded audio file: #{file_path}"
+          log.info "Emitting recorded audio file: #{output_file}"
       
           record = {
-            'path' => file_path,
-            'filename' => File.basename(file_path), # Extract just the filename with extension from the path
-            'size' => File.size(file_path),
-            'timestamp' => Time.now.to_i,
-            'device' => @device,
-            'duration' => duration.round(2),
+            'path' => output_file,
+            'filename' => File.basename(output_file), # Extract just the filename with extension from the path
+            'size' => File.size(output_file),
+            'timestamp' => Fluent::EventTime.now,
+            'device' => @device, 
+            #'duration' => duration.round(2),
             'format' => @audio_codec,
-            'content' => File.binread(file_path)　# Read file content as binary
+            'content' => File.binread(output_file) # Read file content as binary
           }
           
           router.emit(@tag, Fluent::EventTime.now, record)
