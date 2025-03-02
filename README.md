@@ -50,6 +50,7 @@ $ bundle
   # Output settings
   tag audio_recorder.recording  # Event tag (default: audio_recorder.recording)
   buffer_path /tmp/fluentd-audio-recorder # Temporary file path (default: /tmp/fluentd-audio-recorder)
+  recording_interval 0    # Interval between recordings in seconds, 0 for continuous recording (default: 0)
 </source>
 ```
 
@@ -135,6 +136,7 @@ $ gem install fluent-plugin-audio-recorder
   # 出力設定
   tag audio_recorder.recording  # イベントタグ（デフォルト: audio_recorder.recording）
   buffer_path /tmp/fluentd-audio-recorder # 一時ファイル保存パス（デフォルト: /tmp/fluentd-audio-recorder）
+  recording_interval 0    # 録音間隔(秒)、0は連続録音（デフォルト: 0）
 </source>
 ```
 

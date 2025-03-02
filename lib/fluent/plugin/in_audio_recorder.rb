@@ -69,7 +69,7 @@ module Fluent
         }
         
         @recorder = AudioRecorder::Recorder.new(config, log)
-        @running = false  # 録音ループを制御するフラグを初期化
+        @running = false  # Initialize flag to control recording loop
       end
 
       def multi_workers_ready?
@@ -82,7 +82,7 @@ module Fluent
 
       def start
         super
-        @running = true  # 録音開始時にフラグをtrueに設定
+        @running = true  # Set flag to true when starting recording
         
         @recording_thread = thread_create(:audio_recording_thread) do
           # Recording loop: continues while plugin is running and @running is true
@@ -92,12 +92,12 @@ module Fluent
             rescue => e
               log.error "Error in audio recording process", error: e.to_s
               log.error_backtrace
-              # 短い待機時間を入れて連続エラーを防止（スレッドがまだ実行中の場合のみ）
+              # Short sleep to prevent continuous errors (only if thread is still running)
               sleep 1 if @running && thread_current_running?
             end
             
-            # 録音の間にsleepを入れてCPU負荷を軽減（正常終了時）
-            sleep @recording_interval if @running && thread_current_running?
+            # Add sleep between recordings to reduce CPU load (after normal completion)
+            sleep @recording_interval if @running && thread_current_running? && @recording_interval > 0
           end
           
           log.info "Audio recording thread has stopped"
@@ -106,14 +106,14 @@ module Fluent
 
       def shutdown
         log.info "Shutting down audio recorder input plugin"
-        @running = false  # 録音ループを停止するためにフラグをfalseに設定
+        @running = false  # Set flag to false to stop recording loop
         @recorder.request_stop if @recorder
         
-        # スレッドの終了を待つ（タイムアウト付き）
+        # Wait for thread to finish (with timeout)
         if @recording_thread
           begin
             log.info "Waiting for recording thread to finish..."
-            # スレッドの終了を30秒間待機、それ以上かかる場合は強制終了
+            # Wait for thread to finish for 30 seconds, force shutdown if it takes longer
             Timeout.timeout(30) do
               @recording_thread.join
             end

@@ -42,6 +42,7 @@ class AudioRecorderInputTest < Test::Unit::TestCase
       assert_equal 44100, d.instance.audio_sample_rate
       assert_equal 1, d.instance.audio_channels
       assert_equal 'audio_recorder.recording', d.instance.tag
+      assert_equal 0, d.instance.recording_interval # Default recording interval is 0 (continuous)
     end
 
     test "with custom parameters" do
@@ -57,6 +58,7 @@ class AudioRecorderInputTest < Test::Unit::TestCase
         audio_channels 2
         tag custom.audio
         buffer_path #{@tmp_dir}
+        recording_interval 0.5
       ])
 
       assert_equal 1, d.instance.device
@@ -70,6 +72,7 @@ class AudioRecorderInputTest < Test::Unit::TestCase
       assert_equal 2, d.instance.audio_channels
       assert_equal 'custom.audio', d.instance.tag
       assert_equal @tmp_dir, d.instance.buffer_path
+      assert_equal 0.5, d.instance.recording_interval
     end
   end
 
@@ -100,7 +103,7 @@ class AudioRecorderInputTest < Test::Unit::TestCase
       events = d.events
       assert{ events.length > 0 }
   
-      # 最初のイベントを検証
+      # Verify first event
       tag, time, record = d.events.first
 
       assert_equal "audio_recorder.recording", tag
