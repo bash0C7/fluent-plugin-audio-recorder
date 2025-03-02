@@ -80,8 +80,16 @@ module Fluent
         super
         @recording_thread = thread_create(:audio_recording_thread) do
           # Recording loop: continues while plugin is running
-          # Single recording for now, not in a loop
-          record_and_emit
+          while thread_current_running?
+            begin
+              record_and_emit
+            rescue => e
+              log.error "Error in audio recording process", error: e.to_s
+              log.error_backtrace
+              # 短い待機時間を入れて連続エラーを防止
+              sleep 1 unless !thread_current_running?
+            end
+          end
         end
       end
 

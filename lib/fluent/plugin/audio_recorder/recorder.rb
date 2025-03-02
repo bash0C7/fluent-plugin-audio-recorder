@@ -45,7 +45,6 @@ module Fluent
           
           start_time = Time.now
           min_time_reached = false
-          should_stop = false
           recording_duration = 0
           
           # Execute FFmpeg process and monitor stderr
@@ -103,7 +102,6 @@ module Fluent
                     # If minimum recording time has been exceeded and silence lasted long enough
                     if silence_duration_actual >= @silence_duration
                       @log.info "Valid silence period detected. Stopping recording."
-                      should_stop = true
                       Process.kill("INT", ffmpeg_pid) rescue nil
                       break
                     end

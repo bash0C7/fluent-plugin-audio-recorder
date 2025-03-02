@@ -34,7 +34,7 @@ class AudioRecorderInputTest < Test::Unit::TestCase
       d = create_driver
       assert_equal 0, d.instance.device
       assert_equal 1.0, d.instance.silence_duration
-      assert_equal -30, d.instance.noise_level
+      assert_equal(-30, d.instance.noise_level)
       assert_equal 2, d.instance.min_duration
       assert_equal 900, d.instance.max_duration
       assert_equal 'aac', d.instance.audio_codec
@@ -61,7 +61,7 @@ class AudioRecorderInputTest < Test::Unit::TestCase
 
       assert_equal 1, d.instance.device
       assert_equal 2.5, d.instance.silence_duration
-      assert_equal -25, d.instance.noise_level
+      assert_equal(-25, d.instance.noise_level)
       assert_equal 5, d.instance.min_duration
       assert_equal 300, d.instance.max_duration
       assert_equal 'mp3', d.instance.audio_codec
@@ -92,16 +92,19 @@ class AudioRecorderInputTest < Test::Unit::TestCase
       d.instance.instance_variable_set(:@recorder, MockRecorder.new(test_file_path))
       
       # Run the input plugin and capture emitted events
-      d.run(expect_emits: 1, timeout: 5) do
+      d.run(expect_emits: 1, timeout: 1) do
         # The record_and_emit method is called automatically in the thread
       end
       
       # Verify emitted events
       events = d.events
-      assert_equal 1, events.size
-      
-      tag, time, record = events[0]
+      assert{ events.length > 0 }
+  
+      # 最初のイベントを検証
+      tag, time, record = d.events.first
+
       assert_equal "audio_recorder.recording", tag
+      assert time #not null
       assert_equal "test_audio.aac", record["filename"]
       assert_equal test_file_path, record["path"]
       assert_equal "aac", record["format"]
