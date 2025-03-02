@@ -42,7 +42,7 @@ class AudioRecorderInputTest < Test::Unit::TestCase
       assert_equal 44100, d.instance.audio_sample_rate
       assert_equal 1, d.instance.audio_channels
       assert_equal 'audio_recorder.recording', d.instance.tag
-      assert_equal 0, d.instance.recording_interval # Default recording interval is 0 (continuous)
+      assert_equal 0.0, d.instance.recording_interval # Ensure float type matches configuration
     end
 
     test "with custom parameters" do
@@ -87,7 +87,7 @@ class AudioRecorderInputTest < Test::Unit::TestCase
       test_file_path = File.join(@tmp_dir, "test_audio.aac")
       test_content = "dummy audio content" * 100  # Make the file size > 1000 bytes
       
-      File.open(test_file_path, "w") do |f|
+      File.open(test_file_path, "wb") do |f|
         f.write(test_content)
       end
 
@@ -107,17 +107,18 @@ class AudioRecorderInputTest < Test::Unit::TestCase
       tag, time, record = d.events.first
 
       assert_equal "audio_recorder.recording", tag
-      assert time #not null
+      assert time # Ensure time is not null
       assert_equal "test_audio.aac", record["filename"]
       assert_equal test_file_path, record["path"]
       assert_equal "aac", record["format"]
       assert_equal 0, record["device"]
-      assert_true record.has_key?("content")
-      assert_true record.has_key?("size")
+      assert_true record.has_key?("content"), "Record must have 'content' field"
+      assert_true record.has_key?("size"), "Record must have 'size' field"
+      assert_equal test_content.bytesize, record["size"], "Record size must match content bytesize"
       
       # Verify the binary content is passed through correctly
       original_content = File.binread(test_file_path)
-      assert_equal original_content, record["content"]
+      assert_equal original_content, record["content"], "Binary content must match the original file"
     end
   end
 
