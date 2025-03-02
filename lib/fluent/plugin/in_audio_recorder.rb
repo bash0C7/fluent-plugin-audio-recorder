@@ -45,6 +45,9 @@ module Fluent
       desc 'Temporary buffer path for audio files'
       config_param :buffer_path, :string, default: '/tmp/fluentd-audio-recorder'
 
+      desc 'Interval between recordings (seconds, 0 for continuous recording)'
+      config_param :recording_interval, :float, default: 0
+
       def configure(conf)
         super
         # Create temporary buffer directory
@@ -66,6 +69,7 @@ module Fluent
         }
         
         @recorder = AudioRecorder::Recorder.new(config, log)
+        @running = false  # 録音ループを制御するフラグを初期化
       end
 
       def multi_workers_ready?
@@ -78,24 +82,47 @@ module Fluent
 
       def start
         super
+        @running = true  # 録音開始時にフラグをtrueに設定
+        
         @recording_thread = thread_create(:audio_recording_thread) do
-          # Recording loop: continues while plugin is running
-          while thread_current_running?
+          # Recording loop: continues while plugin is running and @running is true
+          while @running && thread_current_running?
             begin
               record_and_emit
             rescue => e
               log.error "Error in audio recording process", error: e.to_s
               log.error_backtrace
-              # 短い待機時間を入れて連続エラーを防止
-              sleep 1 unless !thread_current_running?
+              # 短い待機時間を入れて連続エラーを防止（スレッドがまだ実行中の場合のみ）
+              sleep 1 if @running && thread_current_running?
             end
+            
+            # 録音の間にsleepを入れてCPU負荷を軽減（正常終了時）
+            sleep @recording_interval if @running && thread_current_running?
           end
+          
+          log.info "Audio recording thread has stopped"
         end
       end
 
       def shutdown
+        log.info "Shutting down audio recorder input plugin"
+        @running = false  # 録音ループを停止するためにフラグをfalseに設定
         @recorder.request_stop if @recorder
-        @recording_thread.join if @recording_thread
+        
+        # スレッドの終了を待つ（タイムアウト付き）
+        if @recording_thread
+          begin
+            log.info "Waiting for recording thread to finish..."
+            # スレッドの終了を30秒間待機、それ以上かかる場合は強制終了
+            Timeout.timeout(30) do
+              @recording_thread.join
+            end
+            log.info "Recording thread finished successfully"
+          rescue Timeout::Error
+            log.warn "Recording thread did not finish in time, forcing shutdown"
+          end
+        end
+        
         super
       end
 
@@ -109,7 +136,7 @@ module Fluent
       
           record = {
             'path' => output_file,
-            'filename' => File.basename(output_file), # Extract just the filename with extension from the path
+            'filename' => File.basename(output_file), 
             'size' => File.size(output_file),
             'device' => @device, 
             'format' => @audio_codec,
@@ -117,9 +144,10 @@ module Fluent
           }
           
           router.emit(@tag, Fluent::EventTime.now, record)
+        else
+          log.debug "No valid recording was produced"
         end
       end
-
     end
   end
 end
