@@ -84,6 +84,8 @@ module Fluent
         @recording_thread = thread_create(:audio_recording_thread) do
           # Recording loop: continues while plugin is running
           while @running && thread_current_running?
+            log.debug "#{self.class.name}\##{__method__} start" 
+
             begin
               # Call recorder to record audio file with silence detection
               output_file = @recorder.record_with_silence_detection
@@ -106,6 +108,7 @@ module Fluent
               sleep 1 if @running && thread_current_running?
             end
             
+            log.debug "#{self.class.name}\##{__method__} loop end" 
             # Add sleep between recordings if configured
             sleep @recording_interval if @running && thread_current_running? && @recording_interval > 0
           end
