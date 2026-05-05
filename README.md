@@ -1,3 +1,5 @@
+> **Archived 2026-05-06.** Replaced by [bash0C7/fluentd-audio-transcription-system](https://github.com/bash0C7/fluentd-audio-transcription-system).
+
 # fluent-plugin-audio-recorder
 
 [Fluentd](https://fluentd.org/) input plugin for recording audio from macOS devices.
